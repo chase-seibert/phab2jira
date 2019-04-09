@@ -1,0 +1,2 @@
+phabricator==0.7.0
+jira==2.0.0
