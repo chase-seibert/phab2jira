@@ -86,6 +86,22 @@ class Story(object):
     def reporter(self):
         return user_phid_to_email(self._fields['authorPHID'])
 
+    @property
+    def labels(self):
+        from slugify import slugify
+        from lib_phab import phid_to_name
+        tags = set()
+        attachments = self._obj.get('attachments', {})
+        boards = attachments.get('columns', {}).get('boards', {})
+        for project_phid, project in boards.items():
+            board = project['columns'][0]
+            tags.add(board['name'])
+            project_name = phid_to_name(project_phid)
+            tags.add(project_name)
+        # list does not work, but tuple does?
+        # sorted == the order then come back in from the API, for compare
+        return tuple(sorted(set([slugify(tag) for tag in tags])))
+
     def to_jira(self, fields=None):
         data = dict(
             summary=self.title,
@@ -94,6 +110,7 @@ class Story(object):
             priority=self.priority,
             assignee=self.assignee,
             # reporter=self.reporter,
+            labels=self.labels,
         )
         if settings.JIRA_STORY_POINTS_FIELD:
             data[settings.JIRA_STORY_POINTS_FIELD] = self.story_points
