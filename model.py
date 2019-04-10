@@ -58,12 +58,23 @@ class Story(object):
         points = self._fields['points']
         return int(points) if points else None
 
+    @property
+    def priority(self):
+        priority_name = self._fields['priority']['name']
+        mapping = settings.PHAB_TO_JIRA_PRIORITY_MAP
+        return dict(name=mapping.get(priority_name, priority_name))
+
+    @property
+    def description(self):
+        # TODO: format?
+        return self._fields['description']['raw']
+
     def to_jira(self, fields=None):
         data = dict(
             summary=self.title,
-            description=self._fields['description']['raw'], # TODO: format?
+            description=self.description,
             issuetype=None,  # must be set by a callable, can't auto map
-            priority=None,
+            priority=self.priority,
         )
         if settings.JIRA_STORY_POINTS_FIELD:
             data[settings.JIRA_STORY_POINTS_FIELD] = self.story_points
