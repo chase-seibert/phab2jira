@@ -46,6 +46,13 @@ def load_credentials():
         exit(1)
 
 
+def compare(field, old_value, new_value):
+    if field == 'issuetype':
+        #import ipdb; ipdb.set_trace()
+        return new_value.get('name') == old_value.name
+    return old_value == new_value
+
+
 def create_or_update(project, story):
     # jira.createmeta for other required fields
     jira = _connect()
@@ -72,18 +79,31 @@ def create_or_update(project, story):
         jira.add_simple_link(issue, dict(
             url=story.phab_url,
             title=story.phab_title))
-    # need to make an edit to the record before the link is re-indexed!
-    issue.update(
+    data = dict(
         summary=story.title[:255],
         description=story.description,
         issuetype=dict(
             name=story.task_type,
         ),
     )
-    if created:
-        print 'Created: %s' % issue.permalink()
+    # TODO: optmize to not update unless needed; about 4s savings per story
+    to_update, data_to_update = False, {}
+    for field, new_value in data.items():
+        old_value = getattr(issue.fields, field)
+        if not compare(field, old_value, new_value):
+            to_update = True
+            print '-%s: %s' % (field, old_value)
+            print '+%s: %s' % (field, new_value)
+            data_to_update[field] = new_value
+    # need to make an edit to the record before the link is re-indexed!
+    if created or to_update:
+        issue.update(**data_to_update)
+        if created:
+            print 'Created: %s' % issue.permalink()
+        else:
+            print 'Updated: %s' % issue.permalink()
     else:
-        print 'Updated: %s' % issue.permalink()
+        print 'Nothing to update: %s' % issue.permalink()
     # see issue.fields
     # comment = jira.add_comment('JRA-1330', 'new comment')
     # jira.add_watcher(issue, 'username')

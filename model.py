@@ -48,7 +48,7 @@ class Story(object):
             status=fields['status']['value'],  # TODO: map to JIRA?
             priority=fields['priority']['value'],  # TODO: int to enum?
             points=fields['points'],
-            task_type=None,
+            task_type='Story',  # must be custom mapped
             assigned=phid_to_name(fields['ownerPHID']),  # TODO: translate to username
             tags=tags,
             author=phid_to_name(fields['authorPHID']),
