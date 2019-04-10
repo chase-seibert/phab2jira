@@ -61,7 +61,9 @@ class Story(object):
             priority=None,
         )
         for field, _callable in settings.FIELD_MAPS.items():
-            data[field] = _callable(self._obj)
+            value = _callable(self._obj)
+            if value is not None:
+                data[field] = _callable(self._obj)
         if fields:
             # only return a subset; useful for initial creation
             return {key: data[key] for key in fields}
