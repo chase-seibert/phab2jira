@@ -44,3 +44,41 @@ def load_credentials():
     except IOError as e:
         print e
         exit(1)
+
+
+def create_or_update(project, story):
+    # jira.createmeta for other required fields
+    jira = _connect()
+    created = True
+    matching_issues = jira.search_issues("""
+        project = %s
+        AND issueFunction in linkedIssuesOfRemote("%s")""" % (
+            project, story.phab_url))
+    if len(matching_issues) == 1:
+        issue = matching_issues[0]
+        created = False
+    elif len(matching_issues) > 1:
+        raise ValueError(
+            'Found more than one issue with a remote link %s' % story.phab_url)
+    else:
+        issue = jira.create_issue(
+            project=project,
+            summary=story.title[:255],
+            description='Syncing from Phabricator...',
+            issuetype=dict(
+                name='Bug',
+            ),
+        )
+        jira.add_simple_link(issue, dict(
+            url=story.phab_url,
+            title=story.phab_title))
+        # need to make an edit to the record before the link is re-indexed!
+        issue.update(
+            description=story.description,
+        )
+    print issue.permalink()
+    # see issue.fields
+    # also jira.issue(key) to get, and issue.update(**fields) to update
+    # comment = jira.add_comment('JRA-1330', 'new comment')
+    # jira.add_watcher(issue, 'username')
+    # jira.add_attachment(issue=issue, attachment='/some/path/attachment.txt')

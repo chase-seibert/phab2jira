@@ -43,6 +43,9 @@ def sync(args):
         task = lib_phab.get_task(phid)
         story = Story.from_phab(task)
         print story
+        # jira_issue = Story.to_jira(story)
+        # print jira_issue
+        lib_jira.create_or_update(args.project, story)
 
 
 if __name__ == '__main__':
@@ -77,6 +80,8 @@ if __name__ == '__main__':
         help='Sync issues from Phabricator to JIRA')
     parser_sync.add_argument('--phid',
         help='Phabricator ID of ONE issue to sync')
+    parser_sync.add_argument('--project', help='Project to create the issue in',
+        **kwargs_or_default(settings.JIRA_DEFAULT_PROJECT))
     parser_sync.set_defaults(func=sync)
 
     args = parser.parse_args()

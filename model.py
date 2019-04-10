@@ -4,7 +4,8 @@ import settings
 class Story(object):
 
     def __init__(self, phid, title, description, date_created,
-                 status, priority, points, task_type, assigned, tags, author, subsribers):
+                 status, priority, points, task_type, assigned, tags, author,
+                 subsribers, phab_url, phab_title):
         self.phid = phid
         self.title = title
         self.description = description
@@ -17,6 +18,10 @@ class Story(object):
         self.tags = tags
         self.author = author
         self.subsribers = subsribers
+        self.phab_url = phab_url
+        self.phab_title = phab_title
+
+        # constants
         self.phab_base_url = settings.PHAB_BASE_URL
 
     @classmethod
@@ -37,7 +42,7 @@ class Story(object):
         return cls(
             phid='T%s' % obj['id'],
             title=fields['name'],
-            description=fields['description'],  # TODO: format?
+            description=fields['description']['raw'],  # TODO: format?
             date_created=phab_timestamp_to_date(fields['dateCreated']),  # TODO: parse '1501274237'
             status=fields['status']['value'],  # TODO: map to JIRA?
             priority=fields['priority']['value'],  # TODO: int to enum?
@@ -47,9 +52,17 @@ class Story(object):
             tags=tags,
             author=phid_to_name(fields['authorPHID']),
             subsribers=subsribers,
+            phab_url='%s/T%s' % (settings.PHAB_BASE_URL, obj['id']),
+            phab_title='%s: %s' % (obj['id'], fields['name']),
             # TODO: comments
             # TODO: images
         )
+
+    @classmethod
+    def to_jira(cls, obj):
+        return {
+
+        }
 
     def __unicode__(self):
         return str(self)
