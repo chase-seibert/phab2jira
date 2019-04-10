@@ -52,8 +52,7 @@ def compare(field, old_value, new_value):
     return old_value == new_value
 
 
-def create_or_update(project, story):
-    # jira.createmeta for other required fields
+def _create_or_update_issue(project, story):
     jira = _connect()
     created = True
     matching_issues = jira.search_issues("""
@@ -68,6 +67,7 @@ def create_or_update(project, story):
             'Found more than one issue with a remote link %s' % story.phab_url)
     else:
         # create a placeholder issue, with the right type
+        # jira.createmeta for other required fields
         issue = jira.create_issue(
             project=project,
             description='Syncing from Phabricator...',
@@ -76,18 +76,25 @@ def create_or_update(project, story):
         jira.add_simple_link(issue, dict(
             url=story.phab_url,
             title=story.phab_title))
+    return issue, created
+
+
+def create_or_update(project, story):
+    jira = _connect()
+    issue, created = _create_or_update_issue(project, story)
     data = story.to_jira()
-    # TODO: optmize to not update unless needed; about 4s savings per story
+    # optmize to not update unless needed; about 4s savings per story
     to_update, data_to_update = False, {}
     for field, new_value in data.items():
         old_value = getattr(issue.fields, field)
         if not compare(field, old_value, new_value):
             to_update = True
+            # print a diff of what's changing
             print '-%s: %s' % (field, old_value)
             print '+%s: %s' % (field, new_value)
             data_to_update[field] = new_value
-    # need to make an edit to the record before the link is re-indexed!
     if created or to_update:
+        # need to make an edit to the record before the link is re-indexed!
         issue.update(**data_to_update)
         if created:
             print 'Created: %s' % issue.permalink()
@@ -95,7 +102,6 @@ def create_or_update(project, story):
             print 'Updated: %s' % issue.permalink()
     else:
         print 'Nothing to update: %s' % issue.permalink()
-    # see issue.fields
     # comment = jira.add_comment('JRA-1330', 'new comment')
     # jira.add_watcher(issue, 'username')
     # jira.add_attachment(issue=issue, attachment='/some/path/attachment.txt')
