@@ -6,6 +6,10 @@ JIRA_USERNAME = None
 JIRA_PASSWORD = None
 JIRA_DEFAULT_PROJECT = None  # can be either Project ID or Key (letters)
 
+FIELD_MAPS = {
+    #'task_type': callable,
+}
+
 # allow custom over rides NOT checked in to git (in .gitignore)
 # to use, create a settings_override.py file and duplicate the
 # subset of settings you wish to over-ride there

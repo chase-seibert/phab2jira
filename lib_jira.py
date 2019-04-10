@@ -66,19 +66,25 @@ def create_or_update(project, story):
             summary=story.title[:255],
             description='Syncing from Phabricator...',
             issuetype=dict(
-                name='Bug',
+                name=story.task_type,
             ),
         )
         jira.add_simple_link(issue, dict(
             url=story.phab_url,
             title=story.phab_title))
-        # need to make an edit to the record before the link is re-indexed!
-        issue.update(
-            description=story.description,
-        )
-    print issue.permalink()
+    # need to make an edit to the record before the link is re-indexed!
+    issue.update(
+        summary=story.title[:255],
+        description=story.description,
+        issuetype=dict(
+            name=story.task_type,
+        ),
+    )
+    if created:
+        print 'Created: %s' % issue.permalink()
+    else:
+        print 'Updated: %s' % issue.permalink()
     # see issue.fields
-    # also jira.issue(key) to get, and issue.update(**fields) to update
     # comment = jira.add_comment('JRA-1330', 'new comment')
     # jira.add_watcher(issue, 'username')
     # jira.add_attachment(issue=issue, attachment='/some/path/attachment.txt')

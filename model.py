@@ -39,8 +39,9 @@ class Story(object):
         subsribers = [phid_to_name(phid) for phid in subscriber_phids]
         # import pdb; pdb.set_trace()
         # import ipdb; ipdb.set_trace()
-        return cls(
-            phid='T%s' % obj['id'],
+        phid_display = 'T%s' % obj['id']
+        data = dict(
+            phid=phid_display,
             title=fields['name'],
             description=fields['description']['raw'],  # TODO: format?
             date_created=phab_timestamp_to_date(fields['dateCreated']),  # TODO: parse '1501274237'
@@ -52,11 +53,15 @@ class Story(object):
             tags=tags,
             author=phid_to_name(fields['authorPHID']),
             subsribers=subsribers,
-            phab_url='%s/T%s' % (settings.PHAB_BASE_URL, obj['id']),
-            phab_title='%s: %s' % (obj['id'], fields['name']),
+            phab_url='%s/%s' % (settings.PHAB_BASE_URL, phid_display),
+            phab_title='%s: %s' % (phid_display, fields['name']),
             # TODO: comments
             # TODO: images
         )
+        # allow custom over rides for these mappings, based on custom functions
+        for field, _callable in settings.FIELD_MAPS.items():
+            data[field] = _callable(obj)
+        return cls(**data)
 
     @classmethod
     def to_jira(cls, obj):
