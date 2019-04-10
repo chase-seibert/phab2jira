@@ -1,6 +1,15 @@
 import settings
 
 
+def user_phid_to_email(user_phid):
+    from lib_phab import phid_to_name
+    if not user_phid:
+        return None
+    username = phid_to_name(user_phid)
+    email = '%s%s' % (username, settings.EMAIL_DOMAIN_SUFFIX)
+    return dict(name=email) if email else None
+
+
 class Story(object):
 
     def __init__(self, obj):
@@ -69,12 +78,22 @@ class Story(object):
         # TODO: format?
         return self._fields['description']['raw']
 
+    @property
+    def assignee(self):
+        return user_phid_to_email(self._fields['ownerPHID'])
+
+    @property
+    def reporter(self):
+        return user_phid_to_email(self._fields['authorPHID'])
+
     def to_jira(self, fields=None):
         data = dict(
             summary=self.title,
             description=self.description,
             issuetype=None,  # must be set by a callable, can't auto map
             priority=self.priority,
+            assignee=self.assignee,
+            # reporter=self.reporter,
         )
         if settings.JIRA_STORY_POINTS_FIELD:
             data[settings.JIRA_STORY_POINTS_FIELD] = self.story_points
