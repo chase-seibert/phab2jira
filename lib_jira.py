@@ -50,6 +50,8 @@ def compare(field, old_value, new_value):
     if type(new_value) == dict and 'name' in new_value:
         if hasattr(old_value, 'name'):
             return new_value.get('name') == old_value.name
+    if field == 'labels':
+        return sorted(old_value) == sorted(new_value)
     return old_value == new_value
 
 
