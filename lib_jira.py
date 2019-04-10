@@ -93,7 +93,7 @@ def update_status(issue, new_status):
             print '+status: %s (%s)' % (transistion_id, transistion_name)
             jira.transition_issue(issue, transistion_id)
             return
-    raise NotImplementedError('Status %s not found' % new_status)
+    raise NotImplementedError('Status "%s" not found' % new_status)
 
 
 def create_or_update(project, story):

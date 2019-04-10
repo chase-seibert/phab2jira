@@ -54,7 +54,9 @@ class Story(object):
 
     @property
     def status(self):
-        return self._fields['status']['value']
+        default = settings.JIRA_DEFAULT_STATUS
+        value = self._fields['status']['value']
+        return settings.PHAB_TO_JIRA_STATUS_MAP.get(value, default)
 
     @property
     def issuetype(self):
@@ -129,6 +131,8 @@ class Story(object):
             value = _callable(self._obj)
             if value is not None:
                 data[field] = _callable(self._obj)
+        # post-processing, string None values
+        data = {key: value for key, value in data.items() if value is not None}
         if fields:
             # only return a subset; useful for initial creation
             return {key: data[key] for key in fields}

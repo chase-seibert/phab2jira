@@ -18,6 +18,15 @@ PHAB_TO_JIRA_PRIORITY_MAP = {
 }
 
 
+JIRA_DEFAULT_STATUS = 'Open'
+PHAB_TO_JIRA_STATUS_MAP = {
+    'Open': 'open',
+    'Resolved': 'done',
+    'Needs Investigation': 'on hold',
+    'In progress': 'in progress',
+    'Verify Fix': 'in review',
+}
+
 def get_story_points(obj):
     return int(obj['fields']['points'])
 
