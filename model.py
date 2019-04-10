@@ -1,3 +1,6 @@
+import settings
+
+
 class Story(object):
 
     def __init__(self, phid, title, description, date_created,
@@ -14,6 +17,7 @@ class Story(object):
         self.tags = tags
         self.author = author
         self.subsribers = subsribers
+        self.phab_base_url = settings.PHAB_BASE_URL
 
     @classmethod
     def from_phab(cls, obj):
@@ -51,7 +55,7 @@ class Story(object):
         return str(self)
 
     def __str__(self):
-        return ('''===
+        return ('''=== %(phab_base_url)s/%(phid)s ===
 ID: %(phid)s
 Title: %(title)s
 Author: %(author)s

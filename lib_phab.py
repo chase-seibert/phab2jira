@@ -3,6 +3,8 @@ from datetime import datetime
 from phabricator import Phabricator
 
 import cache
+import settings
+
 
 def phid_to_name(phid):
     if phid is None:
@@ -37,7 +39,8 @@ def list_projects(query):
             slug = result.get('fields', {}).get('slug')
             phid = result.get('phid')
             name = slug or fields.get('name')
-            print '%s %s' % (phid, slug or name)
+            url = '%s/project/profile/%s' % (settings.PHAB_BASE_URL, result.get('id'))
+            print '%s\t%s\t%s' % (url, phid, slug or name)
         after = results['cursor']['after']
         if after is None:
             break
