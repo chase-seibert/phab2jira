@@ -57,6 +57,17 @@ class Story(object):
         return self._fields['status']['value']
 
     @property
+    def issuetype(self):
+        source_field = settings.PHAB_ISSUE_TYPE_FIELD
+        field_map = settings.PHAB_TO_JIRA_ISSUE_TYPE_MAP
+        default = settings.PHAB_TO_JIRA_ISSUE_TYPE_DEFAULT
+        if not source_field or not field_map:
+            return default
+        custom_type = self._fields[source_field]
+        value = field_map.get(custom_type, default)
+        return dict(name=value) if value else None
+
+    @property
     def subscribers(self):
         attachments = self._obj.get('attachments', {})
         subscriber_phids = attachments.get('subscribers', {}).get('subscriberPHIDs', [])
@@ -106,7 +117,7 @@ class Story(object):
         data = dict(
             summary=self.title,
             description=self.description,
-            issuetype=None,  # must be set by a callable, can't auto map
+            issuetype=self.issuetype,
             priority=self.priority,
             assignee=self.assignee,
             # reporter=self.reporter,
