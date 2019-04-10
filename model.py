@@ -58,6 +58,7 @@ class Story(object):
             summary=self.title,
             description=self._fields['description']['raw'], # TODO: format?
             issuetype=None,  # must be set by a callable, can't auto map
+            priority=None,
         )
         for field, _callable in settings.FIELD_MAPS.items():
             data[field] = _callable(self._obj)
