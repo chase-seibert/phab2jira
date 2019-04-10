@@ -3,6 +3,13 @@ import argparse
 import lib_jira
 import lib_phab
 from model import Story
+import settings
+
+
+def kwargs_or_default(setting_value):
+    if setting_value:
+        return dict(default=setting_value)
+    return dict(required=True)
 
 
 def auth(args):
@@ -30,6 +37,7 @@ def query(args):
 def sync(args):
     if args.phid:
         phid = args.phid
+        # TODO: move to function in lib_phab
         if phid.startswith('T'):
             phid = phid[1:]
         task = lib_phab.get_task(phid)
@@ -42,9 +50,12 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(help='sub-command help')
 
     parser_auth = subparsers.add_parser('auth', help='Authenticate to JIRA')
-    parser_auth.add_argument('--server', help='JIRA Server URL', required=True)
-    parser_auth.add_argument('--username', help='JIRA username', required=True)
-    parser_auth.add_argument('--password', help='JIRA password', required=True)
+    parser_auth.add_argument('--server', help='JIRA Server URL',
+        **kwargs_or_default(settings.JIRA_BASE_URL))
+    parser_auth.add_argument('--username', help='JIRA username',
+        **kwargs_or_default(settings.JIRA_USERNAME))
+    parser_auth.add_argument('--password', help='JIRA password',
+        **kwargs_or_default(settings.JIRA_PASSWORD))
     parser_auth.set_defaults(func=auth)
 
     parser_doctor = subparsers.add_parser('doctor', help='Run some diagnostics')
@@ -59,7 +70,7 @@ if __name__ == '__main__':
     parser_query = subparsers.add_parser('query',
         help='Query issues in a project')
     parser_query.add_argument('--project', help='Project to list',
-        required=True)
+        **kwargs_or_default(settings.PHAB_DEFAULT_PROJECT))
     parser_query.set_defaults(func=query)
 
     parser_sync = subparsers.add_parser('sync',

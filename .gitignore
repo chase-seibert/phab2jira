@@ -2,3 +2,4 @@
 .virtualenv
 cache.json
 *.pyc
+settings_override.py

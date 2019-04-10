@@ -30,7 +30,6 @@ class Story(object):
         subsribers = [phid_to_name(phid) for phid in subscriber_phids]
         # import pdb; pdb.set_trace()
         # import ipdb; ipdb.set_trace()
-        import pdb; pdb.set_trace()
         return cls(
             phid='T%s' % obj['id'],
             title=fields['name'],
