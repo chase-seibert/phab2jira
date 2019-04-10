@@ -79,6 +79,20 @@ def _create_or_update_issue(project, story):
     return issue, created
 
 
+def update_status(issue, new_status):
+    jira = _connect()
+    if issue.fields.status.name.lower() == new_status.lower():
+        return
+    for transition in jira.transitions(issue):
+        transistion_id = transition['id']
+        transistion_name = transition['name']
+        if transistion_name.lower() == new_status.lower():
+            print '+status: %s (%s)' % (transistion_id, transistion_name)
+            jira.transition_issue(issue, transistion_id)
+            return
+    raise NotImplementedError('Status %s not found' % new_status)
+
+
 def create_or_update(project, story):
     jira = _connect()
     issue, created = _create_or_update_issue(project, story)
@@ -94,6 +108,7 @@ def create_or_update(project, story):
             print '-%s: %s' % (field, old_value)
             print '+%s: %s' % (field, new_value)
             data_to_update[field] = new_value
+    update_status(issue, story.status)
     if created or to_update:
         # need to make an edit to the record before the link is re-indexed!
         issue.update(**data_to_update)

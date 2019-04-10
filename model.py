@@ -44,6 +44,10 @@ class Story(object):
         return tags
 
     @property
+    def status(self):
+        return self._fields['status']['value']
+
+    @property
     def subscribers(self):
         attachments = self._obj.get('attachments', {})
         subscriber_phids = attachments.get('subscribers', {}).get('subscriberPHIDs', [])
@@ -53,7 +57,7 @@ class Story(object):
         data = dict(
             summary=self.title,
             description=self._fields['description']['raw'], # TODO: format?
-            issuetype=None  # must be set by a callable, can't auto map
+            issuetype=None,  # must be set by a callable, can't auto map
         )
         for field, _callable in settings.FIELD_MAPS.items():
             data[field] = _callable(self._obj)
