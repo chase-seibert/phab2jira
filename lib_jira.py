@@ -48,7 +48,6 @@ def load_credentials():
 
 def compare(field, old_value, new_value):
     if field == 'issuetype':
-        #import ipdb; ipdb.set_trace()
         return new_value.get('name') == old_value.name
     return old_value == new_value
 
@@ -68,24 +67,16 @@ def create_or_update(project, story):
         raise ValueError(
             'Found more than one issue with a remote link %s' % story.phab_url)
     else:
+        # create a placeholder issue, with the right type
         issue = jira.create_issue(
             project=project,
-            summary=story.title[:255],
             description='Syncing from Phabricator...',
-            issuetype=dict(
-                name=story.task_type,
-            ),
-        )
+            **story.to_jira(fields=['summary', 'issuetype']))
+        # create a remote link back to phab, used to look this item up later
         jira.add_simple_link(issue, dict(
             url=story.phab_url,
             title=story.phab_title))
-    data = dict(
-        summary=story.title[:255],
-        description=story.description,
-        issuetype=dict(
-            name=story.task_type,
-        ),
-    )
+    data = story.to_jira()
     # TODO: optmize to not update unless needed; about 4s savings per story
     to_update, data_to_update = False, {}
     for field, new_value in data.items():
