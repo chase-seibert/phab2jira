@@ -53,6 +53,11 @@ class Story(object):
         subscriber_phids = attachments.get('subscribers', {}).get('subscriberPHIDs', [])
         return [phid_to_name(phid) for phid in subscriber_phids]
 
+    @property
+    def story_points(self):
+        points = self._fields['points']
+        return int(points) if points else None
+
     def to_jira(self, fields=None):
         data = dict(
             summary=self.title,
@@ -60,6 +65,8 @@ class Story(object):
             issuetype=None,  # must be set by a callable, can't auto map
             priority=None,
         )
+        if settings.JIRA_STORY_POINTS_FIELD:
+            data[settings.JIRA_STORY_POINTS_FIELD] = self.story_points
         for field, _callable in settings.FIELD_MAPS.items():
             value = _callable(self._obj)
             if value is not None:
