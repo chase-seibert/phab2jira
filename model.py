@@ -50,15 +50,6 @@ class Story(object):
         return [phid_to_name(phid) for phid in subscriber_phids]
 
     def to_jira(self, fields=None):
-        # date_created=phab_timestamp_to_date(fields['dateCreated']),  # TODO: parse '1501274237'
-        # status=fields['status']['value'],  # TODO: map to JIRA?
-        # priority=fields['priority']['value'],  # TODO: int to enum?
-        # points=fields['points'],
-        # assigned=phid_to_name(fields['ownerPHID']),  # TODO: translate to username
-        # tags=tags,
-        # author=phid_to_name(fields['authorPHID']),
-        # TODO: comments
-        # TODO: images
         data = dict(
             summary=self.title,
             description=self._fields['description']['raw'], # TODO: format?

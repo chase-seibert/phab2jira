@@ -82,6 +82,7 @@ def _create_or_update_issue(project, story):
 def create_or_update(project, story):
     jira = _connect()
     issue, created = _create_or_update_issue(project, story)
+    # import ipdb; ipdb.set_trace()
     data = story.to_jira()
     # optmize to not update unless needed; about 4s savings per story
     to_update, data_to_update = False, {}

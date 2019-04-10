@@ -3,3 +3,4 @@
 cache.json
 *.pyc
 settings_override.py
+metadata.json
