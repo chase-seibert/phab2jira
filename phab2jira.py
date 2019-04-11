@@ -79,14 +79,17 @@ def sync(args):
 
 
 def sync_all(args):
-    total_results = 0
+    success, skipped = 0, 0
     for task in lib_phab.query_project(args.project):
         story = Story.from_phab(task)
+        if args.offset and skipped < int(args.offset):
+            skipped += 1
+            continue
         _sync_one(story.phid, args.jira_project, args.update_comments)
-        total_results += 1
-        if total_results >= int(args.limit):
+        success += 1
+        if args.limit and success >= int(args.limit):
             break
-    print 'Total %s' % total_results
+    print 'Total %s' % success
 
 
 if __name__ == '__main__':
@@ -141,6 +144,8 @@ if __name__ == '__main__':
         help='Update comments EVERY time')
     parser_sync_all.add_argument('--limit', action='store',
         help='Stop after a certiain number of issues')
+    parser_sync_all.add_argument('--offset', action='store',
+        help='Start after a certiain number of issues')
     parser_sync_all.set_defaults(func=sync_all)
 
     args = parser.parse_args()
