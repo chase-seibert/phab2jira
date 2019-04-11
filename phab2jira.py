@@ -4,6 +4,7 @@ import lib_jira
 import lib_phab
 from model import Story
 import settings
+import labels
 
 
 def kwargs_or_default(setting_value):
@@ -50,6 +51,15 @@ def sync(args):
         task = lib_phab.get_task(phid)
         story = Story.from_phab(task)
         print story
+        # pre-processing
+        label_whitelist = settings.MIGRATE_ONLY_ISSUES_WITH_LABELS
+        if label_whitelist:
+            if not labels.one_label_in_set(story.labels, label_whitelist):
+                raise ValueError('Skipping, issues does not have labels: %s' % label_whitelist)
+        label_blacklist = settings.NO_MIGRATE_ISSUES_WITH_LABELS
+        if label_blacklist:
+            if labels.one_label_in_set(story.labels, label_blacklist):
+                raise ValueError('Skipping, issues DOES have one of labels: %s' % label_blacklist)
         # jira_issue = Story.to_jira(story)
         # print jira_issue
         issue, created = lib_jira.create_or_update(args.project, story)

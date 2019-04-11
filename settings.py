@@ -35,6 +35,14 @@ FIELD_MAPS = {
     # 'customfield_10006': get_story_points,
 }
 
+# only migrate a subset of the issues matching your query
+MIGRATE_ONLY_ISSUES_WITH_LABELS = None
+
+# you can skip migrating issues with specific labels, usful if there is a
+# subset of your query you do NOT want to migrate to JIRA
+NO_MIGRATE_ISSUES_WITH_LABELS = [
+    #'foobar',
+]
 
 # allow custom over rides NOT checked in to git (in .gitignore)
 # to use, create a settings_override.py file and duplicate the

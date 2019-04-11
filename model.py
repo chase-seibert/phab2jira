@@ -1,4 +1,5 @@
 import settings
+import labels
 
 
 def user_phid_to_email(user_phid):
@@ -102,7 +103,6 @@ class Story(object):
 
     @property
     def labels(self):
-        from slugify import slugify
         from lib_phab import phid_to_name
         tags = set()
         attachments = self._obj.get('attachments', {})
@@ -113,8 +113,7 @@ class Story(object):
             project_name = phid_to_name(project_phid)
             tags.add(project_name)
         # list does not work, but tuple does?
-        # sorted == the order then come back in from the API, for compare
-        return tuple(sorted(set([slugify(tag) for tag in tags])))
+        return labels.generate_labels(tags)
 
     @staticmethod
     def format_text(text):
