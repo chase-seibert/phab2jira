@@ -88,3 +88,10 @@ def get_task(phid):
         cache.update()
         return result
     raise KeyError('Could not find Phabricator task with ID %s' % phid)
+
+
+def get_comments(phid):
+    phab = Phabricator()
+    transactions_set = phab.maniphest.gettasktransactions(ids=[phid, ])
+    transactions = transactions_set[str(phid)]
+    return [t for t in transactions if t.get('comments') is not None]

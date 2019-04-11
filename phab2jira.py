@@ -39,13 +39,17 @@ def sync(args):
         phid = args.phid
         # TODO: move to function in lib_phab
         if phid.startswith('T'):
-            phid = phid[1:]
+            phid = int(phid[1:])
         task = lib_phab.get_task(phid)
         story = Story.from_phab(task)
         print story
         # jira_issue = Story.to_jira(story)
         # print jira_issue
-        lib_jira.create_or_update(args.project, story)
+        issue, created = lib_jira.create_or_update(args.project, story)
+        if created or args.update_comments:
+            # this is relatively expensive, so only do it the first time
+            comments = lib_phab.get_comments(phid)
+            lib_jira.update_comments(issue, comments)
 
 
 if __name__ == '__main__':
@@ -82,6 +86,8 @@ if __name__ == '__main__':
         help='Phabricator ID of ONE issue to sync')
     parser_sync.add_argument('--project', help='Project to create the issue in',
         **kwargs_or_default(settings.JIRA_DEFAULT_PROJECT))
+    parser_sync.add_argument('--update-comments', action='store_true',
+        help='Update comments EVERY time')
     parser_sync.set_defaults(func=sync)
 
     args = parser.parse_args()

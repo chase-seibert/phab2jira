@@ -89,7 +89,7 @@ class Story(object):
     @property
     def description(self):
         # TODO: format?
-        return self._fields['description']['raw']
+        return Story.format_text(self._fields['description']['raw'])
 
     @property
     def assignee(self):
@@ -114,6 +114,20 @@ class Story(object):
         # list does not work, but tuple does?
         # sorted == the order then come back in from the API, for compare
         return tuple(sorted(set([slugify(tag) for tag in tags])))
+
+    @staticmethod
+    def format_text(text):
+        return text
+
+    @classmethod
+    def get_comment_text(cls, comment_obj):
+        from lib_phab import phab_timestamp_to_date
+        return """Original comment by [~%s] on %s:
+
+%s""" % (
+            user_phid_to_email(comment_obj['authorPHID'])['name'],
+            phab_timestamp_to_date(int(comment_obj['dateCreated'])),
+            Story.format_text(comment_obj['comments']))
 
     def to_jira(self, fields=None):
         data = dict(
