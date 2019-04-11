@@ -50,6 +50,8 @@ def sync(args):
             # this is relatively expensive, so only do it the first time
             comments = lib_phab.get_comments(phid)
             lib_jira.update_comments(issue, comments)
+        if created:
+            lib_phab.add_backlink_comment(phid, issue.permalink())
 
 
 if __name__ == '__main__':

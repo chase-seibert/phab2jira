@@ -95,3 +95,13 @@ def get_comments(phid):
     transactions_set = phab.maniphest.gettasktransactions(ids=[phid, ])
     transactions = transactions_set[str(phid)]
     return [t for t in transactions if t.get('comments') is not None]
+
+
+def add_backlink_comment(phid, jira_issue_url):
+    phab = Phabricator()
+    phab.maniphest.edit(
+        objectIdentifier=phid,
+        transactions=[dict(
+            type='comment',
+            value='Migrated to JIRA: %s' % jira_issue_url,
+        )])
