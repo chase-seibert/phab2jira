@@ -123,16 +123,21 @@ class Story(object):
         # very basic remarkup to wiki markdown conversion
         text = text.replace('**', '*')  # bold
         text = text.replace('~~', '-')  # deleted
-        text = re.sub('//(.*?)//', r'_\1_', text)  # italics
+        # text = re.sub('//(\S.*?)//', r'_\1_', text)  # italics
         text = text.replace('```', '{code}')
         # links
         text = re.sub('\[(.*?)\]\((.*?)\)', r'[\1|\2]', text)
         # monospace
-        text = re.sub('`(.*?)`', r'{{\1}}', text)
+        text = re.sub('`\ *(.*?)\ *`', r'{{\1}}', text)
         # maniphest links & phabricator diff links
-        text = re.sub('https\S+((T|D)[0-9]{4,})', r'\1' , text) # inside links
-        text = re.sub('((T|D)[0-9]{4,})', r'[\1|%s/\1]' % settings.PHAB_BASE_URL, text)
+        #text = re.sub('https\S+^\w((T|D)[0-9]{6})', r'\1' , text) # inside links
+        text = re.sub(r'(\s|\-|\()((T|D)[0-9]{5,6})', r'\1[\2|%s/\2]' % settings.PHAB_BASE_URL, text)
         text = text.replace('[]', '[ ]')  # deleted
+        # double-bracket style links
+        text = re.sub('\[\[\ +(http.*?)\ +\|\ +(.*?)\ +\]\]', r'[\2|\1]', text)  # reverse
+        text = re.sub('\[\[(.*?)\|(.*?)\]\]', r'[\1|\2]', text)
+        # images
+        text = re.sub('\{img (.*)\}', r'!\1!', text)
         return text
 
     @classmethod
