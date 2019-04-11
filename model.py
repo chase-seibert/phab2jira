@@ -119,6 +119,20 @@ class Story(object):
 
     @staticmethod
     def format_text(text):
+        import re
+        # very basic remarkup to wiki markdown conversion
+        text = text.replace('**', '*')  # bold
+        text = text.replace('~~', '-')  # deleted
+        text = re.sub('//(.*?)//', r'_\1_', text)  # italics
+        text = text.replace('```', '{code}')
+        # links
+        text = re.sub('\[(.*?)\]\((.*?)\)', r'[\1|\2]', text)
+        # monospace
+        text = re.sub('`(.*?)`', r'{{\1}}', text)
+        # maniphest links & phabricator diff links
+        text = re.sub('https\S+((T|D)[0-9]{4,})', r'\1' , text) # inside links
+        text = re.sub('((T|D)[0-9]{4,})', r'[\1|%s/\1]' % settings.PHAB_BASE_URL, text)
+        text = text.replace('[]', '[ ]')  # deleted
         return text
 
     @classmethod

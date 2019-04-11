@@ -52,6 +52,8 @@ def compare(field, old_value, new_value):
             return new_value.get('name') == old_value.name
     if field == 'labels':
         return sorted(old_value) == sorted(new_value)
+    if field == 'description' and old_value is None and new_value == '':
+        return True
     return old_value == new_value
 
 
@@ -111,11 +113,13 @@ def update_status(issue, new_status):
 
 
 def update_comments(issue, comments):
-    # starting with most recent first
     from model import Story
     jira = _connect()
     existing_comments = jira.comments(issue)
     existing_comments_text = [c.body for c in existing_comments]
+    # list starts with most recent first, but want to insert the OLDest first,
+    # so that it matches the order in JIRA of natural comments
+    list.reverse(comments)
     for new_comment in comments:
         comment_text = Story.get_comment_text(new_comment)
         # don't add dupes, comment updating not implemented
