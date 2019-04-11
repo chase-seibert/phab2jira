@@ -34,7 +34,6 @@ def query(args):
         total_results += 1
     print 'Total %s' % total_results
 
-
 def _sync_one(phid, jira_project, update_comments=False):
     # TODO: move to function in lib_phab
     if phid.startswith('T'):
@@ -46,11 +45,13 @@ def _sync_one(phid, jira_project, update_comments=False):
     label_whitelist = settings.MIGRATE_ONLY_ISSUES_WITH_LABELS
     if label_whitelist:
         if not labels.one_label_in_set(story.labels, label_whitelist):
-            raise ValueError('Skipping, issues does not have labels: %s' % label_whitelist)
+            print 'Skipping, issues does not have labels: %s' % label_whitelist
+            return None, False
     label_blacklist = settings.NO_MIGRATE_ISSUES_WITH_LABELS
     if label_blacklist:
         if labels.one_label_in_set(story.labels, label_blacklist):
-            raise ValueError('Skipping, issues DOES have one of labels: %s' % label_blacklist)
+            print 'Skipping, issues DOES have one of labels: %s' % label_blacklist
+            return None, False
     # jira_issue = Story.to_jira(story)
     # print jira_issue
     issue, created = lib_jira.create_or_update(jira_project, story)

@@ -80,9 +80,12 @@ class Story(object):
     @property
     def story_points(self):
         points = self._fields['points']
-        if points == '0.5':
-            return 0.5
-        return int(points) if points else None
+        if not points:
+            return None
+        try:
+            return int(points)
+        except ValueError:
+            return float(points)  # .5, 1.5, etc
 
     @property
     def priority(self):
