@@ -55,19 +55,33 @@ def compare(field, old_value, new_value):
     return old_value == new_value
 
 
-def _create_or_update_issue(project, story):
+def get_issue_remote_links(issue_id):
+    jira = _connect()
+    issue = jira.issue(issue_id)
+    return jira.remote_links(issue)
+
+def find_issue_by_remote_url(project, remote_url):
     jira = _connect()
     created = True
     matching_issues = jira.search_issues("""
         project = %s
         AND issueFunction in linkedIssuesOfRemote("%s")""" % (
-            project, story.phab_url))
-    if len(matching_issues) == 1:
-        issue = matching_issues[0]
-        created = False
-    elif len(matching_issues) > 1:
+            project, remote_url))
+    if len(matching_issues) > 1:
         raise ValueError(
             'Found more than one issue with a remote link %s' % story.phab_url)
+    elif len(matching_issues) == 1:
+        issue = matching_issues[0]
+        return issue
+    return None
+
+
+def _create_or_update_issue(project, story):
+    jira = _connect()
+    created = True
+    issue = find_issue_by_remote_url(project, story.phab_url)
+    if issue:
+        created = False
     else:
         # create a placeholder issue, with the right type
         # jira.createmeta for other required fields

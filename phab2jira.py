@@ -35,8 +35,15 @@ def query(args):
 
 
 def sync(args):
-    if args.phid:
-        phid = args.phid
+    phid = args.phid or None
+    if args.jira:
+        remote_links = lib_jira.get_issue_remote_links(args.jira)
+        for remote_link in remote_links:
+            if remote_link.object.url.startswith(settings.PHAB_BASE_URL):
+                phid = remote_link.object.url.split('/')[-1]
+        if not phid:
+            raise Exception('Could not find remote link from: %s' % args.jira)
+    if phid:
         # TODO: move to function in lib_phab
         if phid.startswith('T'):
             phid = int(phid[1:])
@@ -86,6 +93,8 @@ if __name__ == '__main__':
         help='Sync issues from Phabricator to JIRA')
     parser_sync.add_argument('--phid',
         help='Phabricator ID of ONE issue to sync')
+    parser_sync.add_argument('--jira',
+        help='JIRA ID of ONE issue to re-sync')
     parser_sync.add_argument('--project', help='Project to create the issue in',
         **kwargs_or_default(settings.JIRA_DEFAULT_PROJECT))
     parser_sync.add_argument('--update-comments', action='store_true',

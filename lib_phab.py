@@ -24,6 +24,10 @@ def phab_timestamp_to_date(timestamp):
     return datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
 
+def phab_url(phid):
+    return '%s/%s' % (settings.PHAB_BASE_URL, phid)
+
+
 def list_projects(query):
     phab = Phabricator()
     after, total_results = None, 0

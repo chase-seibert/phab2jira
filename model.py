@@ -30,7 +30,8 @@ class Story(object):
 
     @property
     def phab_url(self):
-        return '%s/%s' % (settings.PHAB_BASE_URL, self.phid)
+        from lib_phab import phab_url as _phab_url
+        return _phab_url(self.phid)
 
     @property
     def phab_title(self):
