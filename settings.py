@@ -44,6 +44,11 @@ NO_MIGRATE_ISSUES_WITH_LABELS = [
     #'foobar',
 ]
 
+# don't migrate references to these users
+BLACKLISTED_USERS = [
+    # 'foo@bar.com'
+]
+
 # allow custom over rides NOT checked in to git (in .gitignore)
 # to use, create a settings_override.py file and duplicate the
 # subset of settings you wish to over-ride there

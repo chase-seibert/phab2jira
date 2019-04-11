@@ -8,7 +8,9 @@ def user_phid_to_email(user_phid):
         return None
     username = phid_to_name(user_phid)
     email = '%s%s' % (username, settings.EMAIL_DOMAIN_SUFFIX)
-    return dict(name=email) if email else None
+    if email in settings.BLACKLISTED_USERS or not email:
+        return dict(name='unknown')
+    return dict(name=email)
 
 
 class Story(object):
