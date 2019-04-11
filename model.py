@@ -80,6 +80,8 @@ class Story(object):
     @property
     def story_points(self):
         points = self._fields['points']
+        if points == '0.5':
+            return 0.5
         return int(points) if points else None
 
     @property

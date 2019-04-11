@@ -35,6 +35,34 @@ def query(args):
     print 'Total %s' % total_results
 
 
+def _sync_one(phid, jira_project, update_comments=False):
+    # TODO: move to function in lib_phab
+    if phid.startswith('T'):
+        phid = int(phid[1:])
+    task = lib_phab.get_task(phid)
+    story = Story.from_phab(task)
+    print story
+    # pre-processing
+    label_whitelist = settings.MIGRATE_ONLY_ISSUES_WITH_LABELS
+    if label_whitelist:
+        if not labels.one_label_in_set(story.labels, label_whitelist):
+            raise ValueError('Skipping, issues does not have labels: %s' % label_whitelist)
+    label_blacklist = settings.NO_MIGRATE_ISSUES_WITH_LABELS
+    if label_blacklist:
+        if labels.one_label_in_set(story.labels, label_blacklist):
+            raise ValueError('Skipping, issues DOES have one of labels: %s' % label_blacklist)
+    # jira_issue = Story.to_jira(story)
+    # print jira_issue
+    issue, created = lib_jira.create_or_update(jira_project, story)
+    if created or update_comments:
+        # this is relatively expensive, so only do it the first time
+        comments = lib_phab.get_comments(phid)
+        lib_jira.update_comments(issue, comments)
+    if created:
+        lib_phab.add_backlink_comment(phid, issue.permalink())
+    return issue, created
+
+
 def sync(args):
     phid = args.phid or None
     if args.jira:
@@ -44,31 +72,20 @@ def sync(args):
                 phid = remote_link.object.url.split('/')[-1]
         if not phid:
             raise Exception('Could not find remote link from: %s' % args.jira)
-    if phid:
-        # TODO: move to function in lib_phab
-        if phid.startswith('T'):
-            phid = int(phid[1:])
-        task = lib_phab.get_task(phid)
+    if not phid:
+        raise Exception('You need to specify either --phid or --jira')
+    _sync_one(phid, args.jira_project, args.update_comments)
+
+
+def sync_all(args):
+    total_results = 0
+    for task in lib_phab.query_project(args.project):
         story = Story.from_phab(task)
-        print story
-        # pre-processing
-        label_whitelist = settings.MIGRATE_ONLY_ISSUES_WITH_LABELS
-        if label_whitelist:
-            if not labels.one_label_in_set(story.labels, label_whitelist):
-                raise ValueError('Skipping, issues does not have labels: %s' % label_whitelist)
-        label_blacklist = settings.NO_MIGRATE_ISSUES_WITH_LABELS
-        if label_blacklist:
-            if labels.one_label_in_set(story.labels, label_blacklist):
-                raise ValueError('Skipping, issues DOES have one of labels: %s' % label_blacklist)
-        # jira_issue = Story.to_jira(story)
-        # print jira_issue
-        issue, created = lib_jira.create_or_update(args.project, story)
-        if created or args.update_comments:
-            # this is relatively expensive, so only do it the first time
-            comments = lib_phab.get_comments(phid)
-            lib_jira.update_comments(issue, comments)
-        if created:
-            lib_phab.add_backlink_comment(phid, issue.permalink())
+        _sync_one(story.phid, args.jira_project, args.update_comments)
+        total_results += 1
+        if total_results >= int(args.limit):
+            break
+    print 'Total %s' % total_results
 
 
 if __name__ == '__main__':
@@ -100,16 +117,30 @@ if __name__ == '__main__':
     parser_query.set_defaults(func=query)
 
     parser_sync = subparsers.add_parser('sync',
-        help='Sync issues from Phabricator to JIRA')
+        help='Sync ONE issue from Phabricator to JIRA')
     parser_sync.add_argument('--phid',
-        help='Phabricator ID of ONE issue to sync')
+        help='Phabricator ID of issue to sync')
     parser_sync.add_argument('--jira',
-        help='JIRA ID of ONE issue to re-sync')
-    parser_sync.add_argument('--project', help='Project to create the issue in',
+        help='JIRA ID ofissue to re-sync')
+    parser_sync.add_argument('--jira-project',
+        help='JIRA project to create the issue in',
         **kwargs_or_default(settings.JIRA_DEFAULT_PROJECT))
     parser_sync.add_argument('--update-comments', action='store_true',
         help='Update comments EVERY time')
     parser_sync.set_defaults(func=sync)
+
+    parser_sync_all = subparsers.add_parser('sync-all',
+        help='Sync ALL issues from a Phabricator project to JIRA')
+    parser_sync_all.add_argument('--project', help='Project to sync from',
+        **kwargs_or_default(settings.PHAB_DEFAULT_PROJECT))
+    parser_sync_all.add_argument('--jira-project',
+        help='JIRA project to create the issue in',
+        **kwargs_or_default(settings.JIRA_DEFAULT_PROJECT))
+    parser_sync_all.add_argument('--update-comments', action='store_true',
+        help='Update comments EVERY time')
+    parser_sync_all.add_argument('--limit', action='store',
+        help='Stop after a certiain number of issues')
+    parser_sync_all.set_defaults(func=sync_all)
 
     args = parser.parse_args()
     args.func(args)
