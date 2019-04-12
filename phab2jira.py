@@ -85,6 +85,8 @@ def sync_all(args):
         if args.offset and skipped < int(args.offset):
             skipped += 1
             continue
+        if settings.ISSUES_TO_SKIP and story.phid in settings.ISSUES_TO_SKIP:
+            continue
         _sync_one(story.phid, args.jira_project, args.update_comments)
         success += 1
         if args.limit and success >= int(args.limit):

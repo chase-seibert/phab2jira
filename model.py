@@ -148,7 +148,9 @@ class Story(object):
     @classmethod
     def get_comment_text(cls, comment_obj):
         from lib_phab import phab_timestamp_to_date
-        return """Original comment by [~%s] on %s:
+        # could actually mention people with [~%s], but that sends them a
+        # notification, and there is no way to supress it
+        return """Original comment by %s on %s:
 
 %s""" % (
             user_phid_to_email(comment_obj['authorPHID'])['name'],
