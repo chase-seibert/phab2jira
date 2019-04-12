@@ -63,6 +63,7 @@ def _sync_one(phid, jira_project, update_comments=False):
         comments = lib_phab.get_comments(phid)
         lib_jira.update_comments(issue, comments)
     if created:
+        lib_jira.add_backlink_comment(issue, phid, lib_phab.phab_url('T%s' % phid))
         lib_phab.add_backlink_comment(phid, issue.key, issue.permalink())
     return issue, created
 

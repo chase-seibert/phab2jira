@@ -159,3 +159,10 @@ def create_or_update(project, story):
     # jira.add_watcher(issue, 'username')
     # jira.add_attachment(issue=issue, attachment='/some/path/attachment.txt')
     return issue, created
+
+
+def add_backlink_comment(issue, phid, phab_url):
+    jira = _connect()
+    jira.add_comment(issue, """#Maniphest: %s
+Tracked in Maniphest by %s
+""" % (phid, phab_url))
