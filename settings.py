@@ -1,5 +1,8 @@
+EMAIL_DOMAIN_SUFFIX = '@domain.com'
+
 PHAB_BASE_URL = 'https://secure.phabricator.com'
 PHAB_DEFAULT_PROJECT = None
+PHAB_ISSUE_TYPE_FIELD = None
 
 JIRA_BASE_URL = 'https://jira.atlassian.com'
 JIRA_USERNAME = None
@@ -48,6 +51,8 @@ NO_MIGRATE_ISSUES_WITH_LABELS = [
 BLACKLISTED_USERS = [
     # 'foo@bar.com'
 ]
+
+ISSUES_TO_SKIP = []
 
 # allow custom over rides NOT checked in to git (in .gitignore)
 # to use, create a settings_override.py file and duplicate the
