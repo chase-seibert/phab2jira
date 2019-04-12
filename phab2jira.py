@@ -14,7 +14,10 @@ def kwargs_or_default(setting_value):
 
 
 def auth(args):
-    lib_jira.test_auth(**args.__dict__)
+    lib_jira.test_auth(
+        server=args.server,
+        username=args.username,
+        password=args.password)
     lib_jira.save_credentials()
 
 
@@ -118,7 +121,7 @@ if __name__ == '__main__':
 
     parser_query = subparsers.add_parser('query',
         help='Query issues in a project')
-    parser_query.add_argument('--project', help='Project to list',
+    parser_query.add_argument('--project', help='Phabricator project to list',
         **kwargs_or_default(settings.PHAB_DEFAULT_PROJECT))
     parser_query.set_defaults(func=query)
 
