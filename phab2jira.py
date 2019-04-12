@@ -49,6 +49,8 @@ def _should_skip(story):
         if labels.one_label_in_set(story.labels, label_blacklist):
             print 'Skipping, issues DOES have one of labels: %s' % label_blacklist
             return True
+    if settings.ISSUES_TO_SKIP and story.phid in settings.ISSUES_TO_SKIP:
+        continue
     return False
 
 
@@ -96,8 +98,6 @@ def sync_all(args):
         if args.offset and skipped < int(args.offset):
             skipped += 1
             continue
-        if settings.ISSUES_TO_SKIP and story.phid in settings.ISSUES_TO_SKIP:
-            continue
         _sync_one(story.phid, args.jira_project, args.update_comments)
         success += 1
         if args.limit and success >= int(args.limit):
@@ -106,14 +106,21 @@ def sync_all(args):
 
 
 def backlink(args):
+    success, skipped = 0, 0
     for task in lib_phab.query_project(args.project):
         story = Story.from_phab(task)
+        if args.offset and skipped < int(args.offset):
+            skipped += 1
+            continue
         if _should_skip(story):
             continue
         issue, _ = lib_jira.create_or_update(args.jira_project, story)
         phid = int(story.phid[1:])
         lib_jira.add_backlink_comment(issue, phid, lib_phab.phab_url(story.phid))
         lib_phab.add_backlink_comment(phid, issue.key, issue.permalink())
+        success += 1
+        if args.limit and success >= int(args.limit):
+            break
 
 
 if __name__ == '__main__':
@@ -179,6 +186,10 @@ if __name__ == '__main__':
     parser_backlink.add_argument('--jira-project',
         help='JIRA project to create the issue in',
         **kwargs_or_default(settings.JIRA_DEFAULT_PROJECT))
+    parser_backlink.add_argument('--limit', action='store',
+        help='Stop after a certiain number of issues')
+    parser_backlink.add_argument('--offset', action='store',
+        help='Start after a certiain number of issues')
     parser_backlink.set_defaults(func=backlink)
 
     args = parser.parse_args()
