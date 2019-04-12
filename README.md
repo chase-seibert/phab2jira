@@ -1,4 +1,4 @@
-# phab2jira - Migrate Phabricator Maniphest tasks to JIRA issues
+# phab2jira - Bulk Migrate Phabricator Projects to JIRA
 
 Phabricator and JIRA both support CSV export/import. But you loose a lot of the
 rich metadata for your issues, such as comments, links to the original tasks.
@@ -7,7 +7,7 @@ markup.
 
 ## What it does
 
-- Migration one or all issues in a specific Phabricator project
+- Migrate one or all issues in a specific Phabricator project
 - Filter out issues with specific Phabricator boards or statuses
 - Map custom JIRA fields by writing Python code snippets to do the transform
 - Custom issue type mapping
@@ -291,8 +291,8 @@ are rendered natively as links in Phabricator, are converted to `[|]` link synta
 
 Basic best-effort attempts are made to migrate the Phabricator task and comment
 body formatting from
-[Remarkup|https://secure.phabricator.com/book/phabricator/article/remarkup/]
-to [JIRA Wiki Markup|https://confluence.atlassian.com/doc/confluence-wiki-markup-251003035.html].
+[Remarkup](https://secure.phabricator.com/book/phabricator/article/remarkup/)
+to [JIRA Wiki Markup](https://confluence.atlassian.com/doc/confluence-wiki-markup-251003035.html).
 
 - Bold text migrated from `**` to `*` syntax.
 - Strike-through text migrated from `~~` to `-` syntax.
