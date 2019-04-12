@@ -37,6 +37,21 @@ def query(args):
         total_results += 1
     print 'Total %s' % total_results
 
+
+def _should_skip(story):
+    label_whitelist = settings.MIGRATE_ONLY_ISSUES_WITH_LABELS
+    if label_whitelist:
+        if not labels.one_label_in_set(story.labels, label_whitelist):
+            print 'Skipping, issues does not have labels: %s' % label_whitelist
+            return True
+    label_blacklist = settings.NO_MIGRATE_ISSUES_WITH_LABELS
+    if label_blacklist:
+        if labels.one_label_in_set(story.labels, label_blacklist):
+            print 'Skipping, issues DOES have one of labels: %s' % label_blacklist
+            return True
+    return False
+
+
 def _sync_one(phid, jira_project, update_comments=False):
     # TODO: move to function in lib_phab
     if phid.startswith('T'):
@@ -45,16 +60,8 @@ def _sync_one(phid, jira_project, update_comments=False):
     story = Story.from_phab(task)
     print story
     # pre-processing
-    label_whitelist = settings.MIGRATE_ONLY_ISSUES_WITH_LABELS
-    if label_whitelist:
-        if not labels.one_label_in_set(story.labels, label_whitelist):
-            print 'Skipping, issues does not have labels: %s' % label_whitelist
-            return None, False
-    label_blacklist = settings.NO_MIGRATE_ISSUES_WITH_LABELS
-    if label_blacklist:
-        if labels.one_label_in_set(story.labels, label_blacklist):
-            print 'Skipping, issues DOES have one of labels: %s' % label_blacklist
-            return None, False
+    if _should_skip(story):
+        return None, False
     # jira_issue = Story.to_jira(story)
     # print jira_issue
     issue, created = lib_jira.create_or_update(jira_project, story)
@@ -96,6 +103,17 @@ def sync_all(args):
         if args.limit and success >= int(args.limit):
             break
     print 'Total %s' % success
+
+
+def backlink(args):
+    for task in lib_phab.query_project(args.project):
+        story = Story.from_phab(task)
+        if _should_skip(story):
+            continue
+        issue, _ = lib_jira.create_or_update(args.jira_project, story)
+        phid = int(story.phid[1:])
+        lib_jira.add_backlink_comment(issue, phid, lib_phab.phab_url(story.phid))
+        lib_phab.add_backlink_comment(phid, issue.key, issue.permalink())
 
 
 if __name__ == '__main__':
@@ -153,6 +171,15 @@ if __name__ == '__main__':
     parser_sync_all.add_argument('--offset', action='store',
         help='Start after a certiain number of issues')
     parser_sync_all.set_defaults(func=sync_all)
+
+    parser_backlink = subparsers.add_parser('create-backlinks',
+        help='Re-create ALL backlinks from (both directions)')
+    parser_backlink.add_argument('--project', help='Project to sync from',
+        **kwargs_or_default(settings.PHAB_DEFAULT_PROJECT))
+    parser_backlink.add_argument('--jira-project',
+        help='JIRA project to create the issue in',
+        **kwargs_or_default(settings.JIRA_DEFAULT_PROJECT))
+    parser_backlink.set_defaults(func=backlink)
 
     args = parser.parse_args()
     args.func(args)
