@@ -54,7 +54,7 @@ def _should_skip(story):
     return False
 
 
-def _sync_one(phid, jira_project, update_comments=False, trial_run=False, bypass_skip=False):
+def _sync_one(phid, jira_project, update_comments=False, trial_run=False, bypass_skip=False, update_status=None):
     # TODO: move to function in lib_phab
     if phid.startswith('T'):
         phid = int(phid[1:])
@@ -72,6 +72,8 @@ def _sync_one(phid, jira_project, update_comments=False, trial_run=False, bypass
     if created:
         lib_jira.add_backlink_comment(issue, phid, lib_phab.phab_url('T%s' % phid))
         lib_phab.add_backlink_comment(phid, issue.key, issue.permalink())
+    if update_status:
+        lib_phab.update_task_status(phid, update_status)
     return issue, created
 
 
@@ -86,7 +88,7 @@ def sync(args):
             raise Exception('Could not find remote link from: %s' % args.jira)
     if not phid:
         raise Exception('You need to specify either --phid or --jira')
-    _sync_one(phid, args.jira_project, args.update_comments, args.trial_run)
+    _sync_one(phid, args.jira_project, args.update_comments, args.trial_run, args.update_status)
 
 
 def sync_all(args):
@@ -96,7 +98,7 @@ def sync_all(args):
         if args.offset and skipped < int(args.offset):
             skipped += 1
             continue
-        _sync_one(story.phid, args.jira_project, args.update_comments, args.trial_run, args.bypass_skip)
+        _sync_one(story.phid, args.jira_project, args.update_comments, args.trial_run, args.bypass_skip, args.update_status)
         success += 1
         if args.limit and success >= int(args.limit):
             break
@@ -163,6 +165,7 @@ if __name__ == '__main__':
         help='Update comments EVERY time')
     parser_sync.add_argument('--trial-run', action='store_true',
         help='Do not write anything to JIRA')
+    parser_sync.add_argument('--update-status', help='Updated the status of migrated tasks')
     parser_sync.set_defaults(func=sync)
 
     parser_sync_all = subparsers.add_parser('sync-all',
@@ -182,6 +185,7 @@ if __name__ == '__main__':
         help='Do not write anything to JIRA')
     parser_sync_all.add_argument('--column', help='Phabricator column PHID to list')
     parser_sync_all.add_argument('--bypass-skip', action='store_true', help='Do not skip based on label or PHID whitelist/blacklist settings')
+    parser_sync_all.add_argument('--update-status', help='Updated the status of migrated tasks')
     parser_sync_all.set_defaults(func=sync_all)
 
     parser_backlink = subparsers.add_parser('create-backlinks',

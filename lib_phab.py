@@ -114,3 +114,8 @@ def add_backlink_comment(phid, jira_issue_key, jira_issue_url):
             value="""#Jira: %s
 Migrated to JIRA: %s""" % (jira_issue_key, jira_issue_url),
         )])
+
+
+def update_task_status(phid, status):
+    phab = Phabricator()
+    results = phab.maniphest.update(id=int(phid), status=status)
