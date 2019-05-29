@@ -54,7 +54,7 @@ def _should_skip(story):
     return False
 
 
-def _sync_one(phid, jira_project, update_comments=False):
+def _sync_one(phid, jira_project, update_comments=False, trial_run=False):
     # TODO: move to function in lib_phab
     if phid.startswith('T'):
         phid = int(phid[1:])
@@ -62,10 +62,8 @@ def _sync_one(phid, jira_project, update_comments=False):
     story = Story.from_phab(task)
     print story
     # pre-processing
-    if _should_skip(story):
+    if _should_skip(story) or trial_run:
         return None, False
-    # jira_issue = Story.to_jira(story)
-    # print jira_issue
     issue, created = lib_jira.create_or_update(jira_project, story)
     if created or update_comments:
         # this is relatively expensive, so only do it the first time
@@ -88,7 +86,7 @@ def sync(args):
             raise Exception('Could not find remote link from: %s' % args.jira)
     if not phid:
         raise Exception('You need to specify either --phid or --jira')
-    _sync_one(phid, args.jira_project, args.update_comments)
+    _sync_one(phid, args.jira_project, args.update_comments, args.trial_run)
 
 
 def sync_all(args):
@@ -98,7 +96,7 @@ def sync_all(args):
         if args.offset and skipped < int(args.offset):
             skipped += 1
             continue
-        _sync_one(story.phid, args.jira_project, args.update_comments)
+        _sync_one(story.phid, args.jira_project, args.update_comments, args.trial_run)
         success += 1
         if args.limit and success >= int(args.limit):
             break
@@ -162,6 +160,8 @@ if __name__ == '__main__':
         **kwargs_or_default(settings.JIRA_DEFAULT_PROJECT))
     parser_sync.add_argument('--update-comments', action='store_true',
         help='Update comments EVERY time')
+    parser_sync.add_argument('--trial-run', action='store_true',
+        help='Do not write anything to JIRA')
     parser_sync.set_defaults(func=sync)
 
     parser_sync_all = subparsers.add_parser('sync-all',
@@ -177,6 +177,8 @@ if __name__ == '__main__':
         help='Stop after a certiain number of issues')
     parser_sync_all.add_argument('--offset', action='store',
         help='Start after a certiain number of issues')
+    parser_sync_all.add_argument('--trial-run', action='store_true',
+        help='Do not write anything to JIRA')
     parser_sync_all.set_defaults(func=sync_all)
 
     parser_backlink = subparsers.add_parser('create-backlinks',
