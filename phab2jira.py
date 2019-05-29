@@ -54,7 +54,7 @@ def _should_skip(story):
     return False
 
 
-def _sync_one(phid, jira_project, update_comments=False, trial_run=False):
+def _sync_one(phid, jira_project, update_comments=False, trial_run=False, bypass_skip=False):
     # TODO: move to function in lib_phab
     if phid.startswith('T'):
         phid = int(phid[1:])
@@ -62,7 +62,7 @@ def _sync_one(phid, jira_project, update_comments=False, trial_run=False):
     story = Story.from_phab(task)
     print story
     # pre-processing
-    if _should_skip(story) or trial_run:
+    if not bypass_skip and _should_skip(story) or trial_run:
         return None, False
     issue, created = lib_jira.create_or_update(jira_project, story)
     if created or update_comments:
@@ -91,12 +91,12 @@ def sync(args):
 
 def sync_all(args):
     success, skipped = 0, 0
-    for task in lib_phab.query_project(args.project):
+    for task in lib_phab.query_project(args.project, args.column):
         story = Story.from_phab(task)
         if args.offset and skipped < int(args.offset):
             skipped += 1
             continue
-        _sync_one(story.phid, args.jira_project, args.update_comments, args.trial_run)
+        _sync_one(story.phid, args.jira_project, args.update_comments, args.trial_run, args.bypass_skip)
         success += 1
         if args.limit and success >= int(args.limit):
             break
@@ -180,6 +180,8 @@ if __name__ == '__main__':
         help='Start after a certiain number of issues')
     parser_sync_all.add_argument('--trial-run', action='store_true',
         help='Do not write anything to JIRA')
+    parser_sync_all.add_argument('--column', help='Phabricator column PHID to list')
+    parser_sync_all.add_argument('--bypass-skip', action='store_true', help='Do not skip based on label or PHID whitelist/blacklist settings')
     parser_sync_all.set_defaults(func=sync_all)
 
     parser_backlink = subparsers.add_parser('create-backlinks',
