@@ -98,6 +98,16 @@ It will page though all results; there is no limit. If you want to artificially
 step through pages of results, you can use the optional `--limit` and `--offset`
 arguments.
 
+### On-going Migration
+
+To migrate just new issues, you can do something like:
+
+```bash
+python phab2jira.py sync-all --column $PHID-ID --update-status resolved
+```
+
+Given a PHID of a Workboard column in Phabricator, you can migrate that subset
+of tasks, and mark them as Resolved (so as not to process them again next time).
 
 ## Settings
 
