@@ -31,7 +31,7 @@ def projects(args):
 
 def query(args):
     total_results = 0
-    for task in lib_phab.query_project(args.project):
+    for task in lib_phab.query_project(args.project, args.column):
         story = Story.from_phab(task)
         print story
         total_results += 1
@@ -147,6 +147,7 @@ if __name__ == '__main__':
         help='Query issues in a project')
     parser_query.add_argument('--project', help='Phabricator project to list',
         **kwargs_or_default(settings.PHAB_DEFAULT_PROJECT))
+    parser_query.add_argument('--column', help='Phabricator column PHID to list')
     parser_query.set_defaults(func=query)
 
     parser_sync = subparsers.add_parser('sync',

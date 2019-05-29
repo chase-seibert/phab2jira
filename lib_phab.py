@@ -50,17 +50,21 @@ def list_projects(query):
             break
 
 
-def query_project(project):
+def query_project(project, column=None):
     cache.load()
     phab = Phabricator()
+    constraints = {
+        'statuses': ['open'],  # TODO: move to config
+        'projects': [project],
+        # createdStart
+    }
+    if column:
+        constraints['columnPHIDs'] = [column, ]
     after = None
     while True:
         results = phab.maniphest.search(
             after=after,
-            constraints={
-                'statuses': ['open'],  # TODO: move to config
-                'projects': [project],
-            },
+            constraints=constraints,
             attachments={
                 'columns': True,
                 'subscribers': True,
