@@ -50,7 +50,7 @@ def _should_skip(story):
             print 'Skipping, issues DOES have one of labels: %s' % label_blacklist
             return True
     if settings.ISSUES_TO_SKIP and story.phid in settings.ISSUES_TO_SKIP:
-        continue
+        return True
     return False
 
 
