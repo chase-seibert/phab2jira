@@ -54,7 +54,7 @@ def _should_skip(story):
     return False
 
 
-def _sync_one(phid, jira_project, update_comments=False, trial_run=False, bypass_skip=False, update_status=None, update_column=None):
+def _sync_one(phid, args):
     # TODO: move to function in lib_phab
     if phid.startswith('T'):
         phid = int(phid[1:])
@@ -62,19 +62,19 @@ def _sync_one(phid, jira_project, update_comments=False, trial_run=False, bypass
     story = Story.from_phab(task)
     print story
     # pre-processing
-    if not bypass_skip and _should_skip(story) or trial_run:
+    if not args.bypass_skip and _should_skip(story) or args.trial_run:
         return None, False
-    issue, created = lib_jira.create_or_update(jira_project, story)
-    if created or update_comments:
+    issue, created = lib_jira.create_or_update(args.jira_project, story)
+    if created or args.update_comments:
         # this is relatively expensive, so only do it the first time
         comments = lib_phab.get_comments(phid)
         lib_jira.update_comments(issue, comments)
     if created:
         lib_jira.add_backlink_comment(issue, phid, lib_phab.phab_url('T%s' % phid))
         lib_phab.add_backlink_comment(phid, issue.key, issue.permalink())
-    if update_status:
+    if args.update_status:
         lib_phab.update_task_status(phid, update_status)
-    if update_column:
+    if args.update_column:
         lib_phab.update_task_column(phid, update_column)
     return issue, created
 
@@ -90,7 +90,7 @@ def sync(args):
             raise Exception('Could not find remote link from: %s' % args.jira)
     if not phid:
         raise Exception('You need to specify either --phid or --jira')
-    _sync_one(phid, args.jira_project, args.update_comments, args.trial_run, args.update_status, args.update_column)
+    _sync_one(phid, args)
 
 
 def sync_all(args):
@@ -100,7 +100,7 @@ def sync_all(args):
         if args.offset and skipped < int(args.offset):
             skipped += 1
             continue
-        _sync_one(story.phid, args.jira_project, args.update_comments, args.trial_run, args.bypass_skip, args.update_status, args.update_column)
+        _sync_one(story.phid, args)
         success += 1
         if args.limit and success >= int(args.limit):
             break
