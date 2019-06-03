@@ -119,3 +119,16 @@ Migrated to JIRA: %s""" % (jira_issue_key, jira_issue_url),
 def update_task_status(phid, status):
     phab = Phabricator()
     results = phab.maniphest.update(id=int(phid), status=status)
+
+
+def update_task_column(phid, new_column_phid):
+    phab = Phabricator()
+    results = phab.maniphest.edit(
+        objectIdentifier=phid,
+        transactions=[
+            {
+                'type': 'column',
+                'value': [new_column_phid, ],
+            }
+        ],
+    )
