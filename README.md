@@ -103,11 +103,18 @@ arguments.
 To migrate just new issues, you can do something like:
 
 ```bash
-python phab2jira.py sync-all --column $PHID-ID --update-status resolved
+python phab2jira.py sync-all --column $PHID --update-status resolved
 ```
 
 Given a PHID of a Workboard column in Phabricator, you can migrate that subset
 of tasks, and mark them as Resolved (so as not to process them again next time).
+
+You can also update the column of a migrated task in Phabricator:
+
+```bash
+python phab2jira.py sync-all --column $PHID --update-column $PHID2
+```
+
 
 ## Settings
 
