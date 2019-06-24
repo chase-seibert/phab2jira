@@ -73,9 +73,9 @@ def _sync_one(phid, args):
         lib_jira.add_backlink_comment(issue, phid, lib_phab.phab_url('T%s' % phid))
         lib_phab.add_backlink_comment(phid, issue.key, issue.permalink())
     if args.update_status:
-        lib_phab.update_task_status(phid, update_status)
+        lib_phab.update_task_status(phid, args.update_status)
     if args.update_column:
-        lib_phab.update_task_column(phid, update_column)
+        lib_phab.update_task_column(phid, args.update_column)
     return issue, created
 
 
