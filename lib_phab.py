@@ -54,7 +54,7 @@ def query_project(project, column=None):
     cache.load()
     phab = Phabricator()
     constraints = {
-        'statuses': ['open'],  # TODO: move to config
+        # 'statuses': ['open'],  # TODO: move to config
         'projects': [project],
         # createdStart
     }
