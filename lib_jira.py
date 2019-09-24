@@ -5,6 +5,9 @@ import json
 
 from jira import JIRA
 
+import settings
+
+# See: https://jira.readthedocs.io/en/master/api.html
 
 RC_FILE = os.path.join(os.path.expanduser('~'), '.jirarc')
 _credentials = {}
@@ -62,6 +65,7 @@ def get_issue_remote_links(issue_id):
     issue = jira.issue(issue_id)
     return jira.remote_links(issue)
 
+
 def find_issue_by_remote_url(project, remote_url):
     jira = _connect()
     created = True
@@ -78,7 +82,8 @@ def find_issue_by_remote_url(project, remote_url):
     return None
 
 
-def _create_or_update_issue(project, story):
+def _create_or_update_issue(project, story, epic_id=None):
+    # See: https://developer.atlassian.com/server/jira/platform/jira-rest-api-examples/#creating-an-issue-examples
     jira = _connect()
     created = True
     issue = find_issue_by_remote_url(project, story.phab_url)
@@ -87,10 +92,15 @@ def _create_or_update_issue(project, story):
     else:
         # create a placeholder issue, with the right type
         # jira.createmeta for other required fields
+        kwargs = story.to_jira(fields=['summary', 'issuetype'])
+        if epic_id:
+            if not settings.JIRA_EPIC_FIELD:
+                raise Exception('No JIRA_EPIC_FIELD setting defined')
+            kwargs[settings.JIRA_EPIC_FIELD] = epic_id
         issue = jira.create_issue(
             project=project,
             description='Syncing from Phabricator...',
-            **story.to_jira(fields=['summary', 'issuetype']))
+            **kwargs)
         # create a remote link back to phab, used to look this item up later
         jira.add_simple_link(issue, dict(
             url=story.phab_url,
@@ -130,9 +140,9 @@ def update_comments(issue, comments):
             repr(comment_text[:72] + '...') if len(comment_text) > 72 else repr(comment_text))
 
 
-def create_or_update(project, story):
+def create_or_update(project, story, epic_id=None):
     jira = _connect()
-    issue, created = _create_or_update_issue(project, story)
+    issue, created = _create_or_update_issue(project, story, epic_id)
     # import ipdb; ipdb.set_trace()
     data = story.to_jira()
     # optmize to not update unless needed; about 4s savings per story

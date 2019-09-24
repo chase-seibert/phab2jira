@@ -64,7 +64,7 @@ def _sync_one(phid, args):
     # pre-processing
     if not args.bypass_skip and _should_skip(story) or args.trial_run:
         return None, False
-    issue, created = lib_jira.create_or_update(args.jira_project, story)
+    issue, created = lib_jira.create_or_update(args.jira_project, story, args.jira_epic)
     if created or args.update_comments:
         # this is relatively expensive, so only do it the first time
         comments = lib_phab.get_comments(phid)
@@ -169,6 +169,8 @@ if __name__ == '__main__':
         help='Do not write anything to JIRA')
     parser_sync.add_argument('--update-status', help='Updated the status of migrated tasks')
     parser_sync.add_argument('--update-column', help='Updated the column of migrated tasks')
+    parser_sync.add_argument('--bypass-skip', action='store_true', help='Do not skip based on label or PHID whitelist/blacklist settings')
+    parser_sync.add_argument('--jira-epic', help='Create JIRA issues linked to this Epic')
     parser_sync.set_defaults(func=sync)
 
     parser_sync_all = subparsers.add_parser('sync-all',
@@ -190,6 +192,7 @@ if __name__ == '__main__':
     parser_sync_all.add_argument('--bypass-skip', action='store_true', help='Do not skip based on label or PHID whitelist/blacklist settings')
     parser_sync_all.add_argument('--update-status', help='Updated the status of migrated tasks')
     parser_sync_all.add_argument('--update-column', help='Updated the column of migrated tasks')
+    parser_sync_all.add_argument('--jira-epic', help='Create JIRA issues linked to this Epic')
     parser_sync_all.set_defaults(func=sync_all)
 
     parser_backlink = subparsers.add_parser('create-backlinks',

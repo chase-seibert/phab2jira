@@ -9,6 +9,7 @@ JIRA_USERNAME = None
 JIRA_PASSWORD = None
 JIRA_DEFAULT_PROJECT = None  # can be either Project ID or Key (letters)
 JIRA_STORY_POINTS_FIELD = None
+JIRA_EPIC_FIELD = None
 
 PHAB_TO_JIRA_PRIORITY_MAP = {
     'Unbreak Now!': 'Highest',
